@@ -1,0 +1,229 @@
+<!--suppress HtmlUnknownTarget -->
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+    <title>EEGER</title>
+    <style type="text/css">
+        <!--
+        body,td,th {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px;
+            color: #000000;
+        }
+        body {
+            background-color: #FFFFFF;
+            margin: 0;
+        }
+        -->
+    </style>
+    <style type="text/css">
+        <!--
+        .style3 {color: #000066; font-size: 16px}
+
+        .style7 {
+            font-size: 20px;
+            color: #FFFFFF;
+            font-weight: bold;
+        }
+
+        .style11 {font-size: 20px; color: #5105a5; font-weight: bold; }
+
+        -->
+    </style>
+</head>
+<body>
+<table style="width: 848px; height: 77px;" border="0" cellpadding="0" cellspacing="0">
+    <tbody>
+    <tr bordercolor="#5105a5">
+        <td bgcolor="#ffffff" height="75" width="101">
+            <img src="http://support.eeger.com/Images/EEGER%20Logo%20small.png" alt="" style="border: 0 solid ; width: 225px; height: 70px;"> &nbsp;
+        </td>
+        <td bgcolor="#ffffff" width="500">
+            <div align="center">
+                <span class="style11">EEGer&trade; TECHNICAL SUPPORT<br> INSTRUCTIONS AND INFORMATION<br>
+                    <span style="font-size: small;">
+                        <br>
+                        Telephone support from 10am to 8pm EDT M-F
+                        <br>
+                        800-789-3456 or 818-789-3456
+                    </span>
+                </span>
+            </div>
+        </td>
+        <td align="left" bgcolor="#ffffff" valign="center" width="200">
+            <div align="center">
+                <a href="http://www.eegstore.com">
+                    <img style="border: 0 solid ; width: 115px; height: 90px;" alt="EEG Store" src="http://support.eeger.com/Images/EEGStore.png">
+                </a>
+                <span style="font-weight: bold;">
+                    888-521-9803<br> Exclusive North American<br> Distributor for EEGer4
+                </span>
+                <span class="style7"></span>
+            </div>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<table border="0" cellpadding="6" cellspacing="0" width="851">
+    <tbody>
+    <tr align="left" valign="top">
+        <td bgcolor="#f7f5f2" height="379" width="545d">
+            Please provide your EKX file
+            <br>
+            <input type="file" id="ekxFile" onchange="onFileInputChanged()">
+            <br>
+            <br>
+            <button id="start_download" onclick="clickedUpload()">Upload</button>
+            <br>
+            <br>
+            <strong id="please_wait" style="display: none">Please Wait <span id="ellipses"></span></strong>
+            <a href="" style="display: none" id="download_button">Download new EKB file</a>
+        </td>
+        <td colspan="2" bgcolor="#e5e5e5" height="27">
+            <div align="center">
+                <span class="style3">
+                    Contact EEG Education &amp; Research Technical Support
+                    <br>
+                    Phone:<strong> 1-800-789-3456 </strong>
+                    <br>
+                    Email: <a href="mailto:support@eeger.com">support@eeger.com</a>
+                </span>
+            </div>
+        </td>
+    </tr>
+    </tbody>
+</table>
+</body>
+<script type="application/javascript">
+    var uploadFile= function (file) {
+        var reader = new FileReader();
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "https://p34omxrne5.execute-api.us-east-1.amazonaws.com/prod/check-status");
+        setStartDownloadButton(false);
+        setDownloadEkxFile(null);
+        xhr.overrideMimeType('application/json');
+        reader.onload = function(evt) {
+            xhr.send(evt.target.result);
+        };
+        xhr.onreadystatechange = function () {
+          if(xhr.readyState == 4){
+              showPleaseWait(false);
+              setStartDownloadButton(true);
+              if(xhr.status !== 200){
+                  showErrorMessage();
+                  return;
+              }
+              var response = JSON.parse(xhr.responseText);
+              //noinspection JSUnresolvedVariable
+              if(response.errorMessage !== undefined){
+                  showErrorMessage();
+                  return
+              }
+              switch (response.code)
+              {
+                  case 'error':
+                      showErrorMessage();
+                      break;
+                  case 'ok':
+                      alert("Everything is up to date, nothing new to install!");
+                      break;
+                  case 'new':
+                      setDownloadEkxFile(response.message);
+                      break;
+              }
+          }  else {
+              console.log("Ready state is " + xhr.readyState);
+              console.log("Stats is " + xhr.status);
+          }
+        };
+        reader.readAsBinaryString(file);
+        showPleaseWait(true);
+    };
+
+    var setDownloadEkxFile = function (url) {
+        var ekx_button = document.getElementById("download_button");
+        ekx_button.href = url;
+        var style = "none";
+        if(url){
+            style = "inline";
+        }
+        ekx_button.style.display = style;
+    };
+
+    var showErrorMessage = function (message) {
+        if(!message){
+            message = "Sorry, something went wrong your request can not be completed at this time, please contact support!"
+        }
+        alert(message);
+    };
+
+    var setStartDownloadButton = function (enabled) {
+        var start_download_button = document.getElementById("start_download");
+        start_download_button.disabled = !enabled;
+    };
+
+    var clickedUpload = function () {
+        var file = checkForNewKeyFile();
+        if(file){
+            uploadFile(file);
+        } else {
+            noFilesChosen();
+        }
+    };
+
+    var onFileInputChanged = function () {
+      setStartDownloadButton(checkForNewKeyFile() !== null)
+    };
+
+    var showPleaseWait = function (value) {
+        var pleaseWait = document.getElementById("please_wait");
+        pleaseWait.style.display = value? "inline":"none";
+        if(!value){
+            if (pleaseWaitIntervalId === null) {
+                return
+            }
+            clearInterval(pleaseWaitIntervalId);
+            pleaseWaitIntervalId = null;
+        } else {
+            pleaseWaitIntervalId = setInterval(ellipses, 200);
+        }
+    };
+
+    var ellipses = function () {
+        var ellipse = document.getElementById("ellipses");
+        var length = ellipse.innerHTML.length + 1;
+        if(length > 3){
+            length = 0;
+        }
+        var text = "";
+        for(var i = 0; i < length; i ++){
+            text += ".";
+        }
+        ellipse.innerHTML = text;
+    };
+
+    var pleaseWaitIntervalId = null;
+
+    var checkForNewKeyFile  = function () {
+        var x = document.getElementById("ekxFile");
+        if ('files' in x) {
+            if (x.files.length !== 0) {
+                return x.files[0];
+            }
+        }
+        else {
+            if (x.value !== "") {
+                alert("The files property is not supported by your browser!");
+            }
+        }
+        return null;
+    };
+
+    var noFilesChosen = function () {
+        alert("Please select an ekx file to upload");
+    };
+
+    setStartDownloadButton(false);
+    showPleaseWait(false);
+</script>
+</html>
