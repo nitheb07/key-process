@@ -1,0 +1,21 @@
+{
+  "name": "key_process_name",
+  "version": "1.0.0",
+  "description": "Eeger downlaod/upload key utility",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@bitbucket.org/egrg/key_process.git"
+  },
+  "author": "coltonawhite@gmail.com",
+  "license": "NONE",
+  "homepage": "https://bitbucket.org/egrg/key_process#readme",
+  "dependencies": {
+    "express": "^4.14.0",
+    "mkdirp": "^0.5.1",
+    "temp": "^0.8.3"
+  }
+}
